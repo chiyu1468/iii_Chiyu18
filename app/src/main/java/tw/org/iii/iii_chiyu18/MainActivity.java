@@ -3,7 +3,13 @@ package tw.org.iii.iii_chiyu18;
 import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.content.ContentResolver;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -13,16 +19,19 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     TextView tv;
+    ImageView iv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         tv = (TextView) findViewById(R.id.textView);
+        iv = (ImageView) findViewById(R.id.imageView);
         Permission();
     }
 
@@ -59,13 +68,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    // 抓機碼
     public void b1(View v){
         Log.v("chiyu","機碼: " + tmgr.getDeviceId());
         Log.v("chiyu","SIM: " + tmgr.getSubscriberId());
         tv.setText("機碼 : " + tmgr.getDeviceId() + "\nSIM : " + tmgr.getSubscriberId());
     }
-
+    // 抓帳號
     private AccountManager amrg;
     public void b2(View v){
         tv.setText("");
@@ -75,16 +84,58 @@ public class MainActivity extends AppCompatActivity {
             tv.append(Acc.name + " : " + Acc.type + "\n");
         }
     }
+    // 抓聯絡人
+    public void b3(View v){
+        ContentResolver ctrv = getContentResolver();
+        String[] project = new String[]{
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                ContactsContract.CommonDataKinds.Phone.NUMBER};
+
+        Cursor cursor = ctrv.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                project, null, null,null);
+
+        Log.v("chiyu","Count : " + cursor.getCount());
+        tv.setText("");
+        while (cursor.moveToNext()){
+            String name = cursor.getString(0);
+            String tel = cursor.getString(1);
+            tv.append(name + " : " + tel + "\n");
+            //Log.v("chiyu",name + " : " + tel);
+        }
+    }
+    // 抓照片
+    public void b4(View v){
+        ContentResolver ctrv = getContentResolver();
+        Cursor c = ctrv.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, null);
+
+        Log.v("chiyu","Photo count : " + c.getCount());
+
+        c.moveToLast();
+        String data = c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA));
+        Log.v("chiyu","Photo Path : " + data);
+
+        Bitmap bm = BitmapFactory.decodeFile(data);
+        iv.setImageBitmap(bm);
+
+    }
+
 
 
     void Permission() {
         if (ContextCompat.checkSelfPermission(this,
                 // 開發的時候 一個個加上去
                 //Manifest.permission.READ_PHONE_STATE)
-                Manifest.permission.GET_ACCOUNTS)
+                //Manifest.permission.GET_ACCOUNTS)
+                //Manifest.permission.READ_CONTACTS)
+                Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.GET_ACCOUNTS},
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                                 Manifest.permission.GET_ACCOUNTS,
+                                 Manifest.permission.READ_CONTACTS,
+                                 Manifest.permission.READ_PHONE_STATE},
                     234);
         } else {
             init();

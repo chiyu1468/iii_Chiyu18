@@ -4,6 +4,10 @@
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <!-- 這行沒用的樣子 書上錯了 -->
+    <!-- <uses-permission android:name="android.permission.ACCOUNT_MANAGER"/> -->
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
